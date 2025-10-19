@@ -137,10 +137,7 @@ class ScoreCard
     relic_sets_cells
   end
 
-  def generate(output_path)
-    x_offset = 10
-    y_offset = 10
-
+  def image_size(x_offset, y_offset)
     # calc image size
     player_area_size = @player_info.calc_cell_area
     width = x_offset + player_area_size[:x] + x_offset
@@ -163,26 +160,50 @@ class ScoreCard
     end
     width = x_offset + character_area_total_width if width < x_offset + character_area_total_width
 
-    # render cells
-    offset = { x: x_offset, y: y_offset }
-    surface = Cairo::ImageSurface.new(width, height)
-    context = Cairo::Context.new(surface)
+    { width: width, height: height }
+  end
 
+  def render_character_area(context, offset, y_padding, this_character_info)
+    x_pos = offset[:x]
+    y_pos = offset[:y]
+    this_character_info.each do |this_info|
+      area_size = this_info.calc_cell_area
+      this_offset = { x: x_pos, y: y_pos }
+      this_info.render_cell_area(context, this_offset)
+      y_pos += area_size[:y] + y_padding
+    end
+  end
+
+  def calc_char_area_width(this_character_info)
+    width = 0
+    this_character_info.each do |this_info|
+      area_size = this_info.calc_cell_area
+      width = width < area_size[:x] ? area_size[:x] : width
+    end
+    width
+  end
+
+  def render_card(context, offset)
     @player_info.render_cell_area(context, offset)
     area_size = @player_info.calc_cell_area
-    offset[:y] += area_size[:y] + y_offset
+
+    char_area_offset = { x: offset[:x], y: offset[:y] + (area_size[:y] + offset[:y]) }
     @list_character.each do |this_character_info|
-      next_offset_x = 0
-      next_offset_y = 0
-      this_character_info.each do |this_info|
-        area_size = this_info.calc_cell_area
-        this_offset = { x: offset[:x], y: offset[:y] + next_offset_y }
-        this_info.render_cell_area(context, this_offset)
-        next_offset_x = next_offset_x < area_size[:x] ? area_size[:x] : next_offset_x
-        next_offset_y += area_size[:y] + y_offset
-      end
-      offset[:x] += next_offset_x + x_offset
+      render_character_area(context, char_area_offset, offset[:y], this_character_info)
+      char_area_offset[:x] += calc_char_area_width(this_character_info) + offset[:x]
     end
+  end
+
+  def generate(output_path)
+    x_offset = 10
+    y_offset = 10
+
+    canvas = image_size(x_offset, y_offset)
+
+    offset = { x: x_offset, y: y_offset }
+    surface = Cairo::ImageSurface.new(canvas[:width], canvas[:height])
+    context = Cairo::Context.new(surface)
+    render_card(context, offset)
 
     surface.write_to_png(output_path)
   end
