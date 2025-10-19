@@ -18,106 +18,123 @@ class ScoreCard
                                         text_array: [player_id,
                                                      player_name])
 
-    # store charactor info
-    @character_info = []
-    param['characters'].each do |charactor|
-      this_character_info = []
-      # basic character info, statistics, attributes, additions, properties （ステータス）
-      string_array = []
-      string_array.push("名前　: #{charactor['name']}")
-      string_array.push("レベル: #{charactor['level']}")
-      string_array.push("星魂　:E#{charactor['rank']}")
-      statistics = charactor['statistics']
-      statistics.each do |statistic|
-        string_array.push("速度値　　　　　: #{statistic['value']}") if statistic['field'] == 'spd'
-      end
-      attributes = charactor['attributes']
-      attributes.each do |attribute|
-        string_array.push("基礎速度　　　　: #{attribute['value']}") if attribute['field'] == 'spd'
-      end
-      additions = charactor['additions']
-      additions.each do |addition|
-        string_array.push("速度補正値＠全体： #{addition['value']}") if addition['field'] == 'spd'
-      end
-      properties = charactor['properties']
-      properties.each do |property|
-        if property['field'] == 'spd'
-          if property['percent'] == true
-            string_array.push("速度補正％＠個別: #{property['display']}")
-          else
-            string_array.push("速度補正値＠個別: #{property['value']}")
-          end
-        end
-      end
-      this_character_info.push(ScoreCardAnyCell.new(image_path: charactor['icon'].to_s, text_array: string_array))
-      # skip: rank_icons (with chara_rank)
-      # skip: path（運命）, element（属性）
-      # skip: skills（スキル）
-      # skip: skill_trees（軌跡）
-
-      # light_cone（光円錐）
-      light_cone = charactor['light_cone']
-      string_array = []
-      string_array.push("#{light_cone['name']} Lv:#{light_cone['level']} 重畳:#{light_cone['rank']}")
-      # skip: light_cone["attributes"] -> 基礎HP/基礎攻撃力/基礎防御力のみのため速度は含まない
-      light_cone['properties'].each do |property|
-        if property['field'] == 'spd'
-          if property['percent'] == true
-            stringArray.push("#{property['name']}：#{property['display']}")
-          else
-            stringArray.push("#{property['name']}：#{property['value']}")
-          end
-        end
-      end
-      if string_array.length > 1
-        this_character_info.push(ScoreCardAnyCell.new(image_path: light_cone['icon'].to_s,
-                                                      text_array: string_array))
-      end
-
-      # relics（遺物、オーナメント）
-      relics = charactor['relics']
-      relics.each do |relic|
-        string_array = ["#{relic['name']}（#{relic['set_name']}） Lv:#{relic['level']}"]
-        relic_icon_path = relic['icon'].to_s
-        main_affix = relic['main_affix']
-        if main_affix['field'] == 'spd'
-          if relic['main_affix']['percent'] == true
-            string_array.push("　メイン #{relic['main_affix']['name']}：#{relic['main_affix']['display']}")
-          else
-            string_array.push("　メイン #{relic['main_affix']['name']}：#{relic['main_affix']['value']}")
-          end
-        end
-        relic['sub_affix'].each do |sub_affix|
-          if sub_affix['field'] == 'spd'
-            if sub_affix['percent'] == true
-              string_array.push("　サブ　 #{sub_affix['name']}：#{sub_affix['display']}")
-            else
-              string_array.push("　サブ　 #{sub_affix['name']}：#{sub_affix['value']}")
-            end
-          end
-        end
-        this_character_info.push(ScoreCardAnyCell.new(image_path: relic_icon_path, text_array: string_array))
-      end
-
-      # relic_sets（遺物セット効果、オーナメント含む）
-      relic_sets = charactor['relic_sets']
-      string_array = []
-      relic_sets.each do |effect|
-        effect['properties'].each do |property|
-          if property['field'] == 'spd'
-            if property['percent'] == true
-              this_character_info.push(ScoreCardAnyCell.new(image_path: effect['icon'].to_s,
-                                                            text_array: ["#{effect['name']}（#{effect['num']}セット）：#{property['name']}#{property['display']}"]))
-            else
-              this_character_info.push(ScoreCardAnyCell.new(image_path: effect['icon'].to_s,
-                                                            text_array: ["#{effect['name']}（#{effect['num']}セット）：#{property['name']}#{property['value']}"]))
-            end
-          end
-        end
-      end
-
-      @character_info.push(this_character_info)
+    # store character info
+    @list_character = []
+    param['characters'].each do |character|
+      @list_character.push(info_character(character))
     end
+  end
+
+  # all info of single character
+  def info_character(character)
+    this_character_info = []
+    this_character_info.concat(cells_character(character))
+    # skip: rank_icons (with chara_rank)
+    # skip: path（運命）, element（属性）
+    # skip: skills（スキル）
+    # skip: skill_trees（軌跡）
+    this_character_info.concat(cells_light_cone(character['light_cone']))
+    this_character_info.concat(cells_relics(character['relics']))
+    this_character_info.concat(cells_relic_set(character['relic_sets']))
+    this_character_info
+  end
+
+  # basic character info
+  def cells_character(character)
+    string_array = [
+      "名前　: #{character['name']}",
+      "レベル: #{character['level']}",
+      "星魂　:E#{character['rank']}"
+    ]
+    string_array.concat(string_character_spd(character['statistics'],
+                                             character['attributes'],
+                                             character['additions']))
+    string_array.concat(strings_character_prop(character['properties']))
+
+    [ScoreCardAnyCell.new(image_path: character['icon'], text_array: string_array)]
+  end
+
+  # statistics, attributes, additions（ステータス）
+  def string_character_spd(statistics, attributes, additions)
+    string_array = []
+    [statistics, attributes, additions].flatten.each do |element|
+      next unless element['field'] == 'spd'
+
+      string_array.push("#{element['name']}　　　　　　: #{element['value']}")
+    end
+    string_array
+  end
+
+  # properties（ステータス）
+  def strings_character_prop(properties)
+    string_array = []
+    properties.each do |property|
+      next unless property['field'] == 'spd'
+
+      if property['percent'] == true
+        string_array.push("速度補正％＠個別: #{property['display']}")
+      else
+        string_array.push("速度補正値＠個別: #{property['value']}")
+      end
+    end
+    string_array
+  end
+
+  # light_cone（光円錐）
+  def cells_light_cone(light_cone)
+    string_array = ["#{light_cone['name']} Lv:#{light_cone['level']} 重畳:#{light_cone['rank']}"]
+    # skip: light_cone["attributes"] -> 基礎HP/基礎攻撃力/基礎防御力のみのため速度は含まない
+    light_cone['properties'].each do |property|
+      next unless property['field'] == 'spd'
+
+      string_array.push("#{property['name']}：#{property['percent'] == true ? property['display'] : property['value']}")
+    end
+    string_array.length > 1 ? [ScoreCardAnyCell.new(image_path: light_cone['icon'], text_array: string_array)] : []
+  end
+
+  # relics（遺物、オーナメント）
+  def string_relics_main(main_affix)
+    if main_affix['field'] == 'spd'
+      ["　メイン #{main_affix['name']}：#{main_affix['percent'] == true ? main_affix['display'] : main_affix['value']}"]
+    else
+      []
+    end
+  end
+
+  def string_relics_sub(sub_affix)
+    string_array = []
+    sub_affix.each do |sub|
+      next unless sub['field'] == 'spd'
+
+      string_array.push("　サブ　 #{sub['name']}：#{sub['percent'] == true ? sub['display'] : sub['value']}")
+    end
+    string_array
+  end
+
+  def cells_relics(relics)
+    relics_cells = []
+    relics.each do |relic|
+      string_array = ["#{relic['name']}（#{relic['set_name']}） Lv:#{relic['level']}"]
+      string_array.concat(string_relics_main(relic['main_affix']))
+      string_array.concat(string_relics_sub(relic['sub_affix']))
+      relics_cells.push(ScoreCardAnyCell.new(image_path: relic['icon'], text_array: string_array))
+    end
+    relics_cells
+  end
+
+  # relic_sets（遺物セット効果、オーナメント含む）
+  def cells_relic_set(relic_sets)
+    relic_sets_cells = []
+    relic_sets.each do |effect|
+      effect['properties'].each do |prop|
+        next unless prop['field'] == 'spd'
+
+        text = "#{effect['name']}（#{effect['num']}セット）：" \
+               "#{prop['name']}#{prop['percent'] == true ? prop['display'] : prop['value']}"
+        relic_sets_cells.push(ScoreCardAnyCell.new(image_path: effect['icon'], text_array: [text]))
+      end
+    end
+    relic_sets_cells
   end
 
   def generate(output_path)
@@ -129,7 +146,7 @@ class ScoreCard
     width = x_offset + player_area_size[:x] + x_offset
     height = y_offset + player_area_size[:y] + y_offset
     character_area_total_width = 0
-    @character_info.each do |this_character_info|
+    @list_character.each do |this_character_info|
       character_area_total_height = 0
       this_character_area_max_width = 0
       this_character_info.each do |this_info|
@@ -154,7 +171,7 @@ class ScoreCard
     @player_info.render_cell_area(context, offset)
     area_size = @player_info.calc_cell_area
     offset[:y] += area_size[:y] + y_offset
-    @character_info.each do |this_character_info|
+    @list_character.each do |this_character_info|
       next_offset_x = 0
       next_offset_y = 0
       this_character_info.each do |this_info|
