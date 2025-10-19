@@ -137,30 +137,38 @@ class ScoreCard
     relic_sets_cells
   end
 
-  def image_size(x_offset, y_offset)
-    # calc image size
-    player_area_size = @player_info.calc_cell_area
-    width = x_offset + player_area_size[:x] + x_offset
-    height = y_offset + player_area_size[:y] + y_offset
-    character_area_total_width = 0
+  def char_area_width(x_offset)
+    total_width = x_offset
     @list_character.each do |this_character_info|
-      character_area_total_height = 0
-      this_character_area_max_width = 0
+      max_width = 0
       this_character_info.each do |this_info|
         area_size = this_info.calc_cell_area
-        character_area_total_height += area_size[:y] + y_offset
-        if this_character_area_max_width < area_size[:x] + x_offset
-          this_character_area_max_width = area_size[:x] + x_offset
-        end
+        max_width = [max_width, area_size[:x]].max
       end
-      if height < y_offset + player_area_size[:y] + y_offset + character_area_total_height
-        height = y_offset + player_area_size[:y] + y_offset + character_area_total_height
-      end
-      character_area_total_width += this_character_area_max_width
+      total_width += max_width + x_offset
     end
-    width = x_offset + character_area_total_width if width < x_offset + character_area_total_width
+    total_width
+  end
 
-    { width: width, height: height }
+  def char_area_height(y_offset)
+    max_height = 0
+    @list_character.each do |this_character_info|
+      total_height = 0
+      this_character_info.each do |this_info|
+        area_size = this_info.calc_cell_area
+        total_height += area_size[:y] + y_offset
+      end
+      max_height = [max_height, total_height].max
+    end
+    max_height
+  end
+
+  def image_size(x_offset, y_offset)
+    player_area_size = @player_info.calc_cell_area
+    player_area_width = x_offset + player_area_size[:x] + x_offset
+    player_area_height = y_offset + player_area_size[:y] + y_offset
+    { width: [player_area_width, char_area_width(x_offset)].max,
+      height: player_area_height + char_area_height(y_offset) }
   end
 
   def render_character_area(context, offset, y_padding, this_character_info)
