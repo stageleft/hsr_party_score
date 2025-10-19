@@ -1,189 +1,174 @@
 require 'open-uri'
 require 'cairo'
 require 'json'
+require_relative 'scorecard_anycell'
 
+# ScoreCard
+# Generate a scorecard image from player and character data.
 class ScoreCard
-    def initialize(width: 6300, height: 10+(128+10)+(256+10)*8)
-        # @domain   = "https://github.com/Mar-7th/StarRailRes/blob/master/"
-        @domain     = "https://raw.githubusercontent.com/Mar-7th/StarRailRes/refs/heads/master/"
-        @width      = width
-        @height     = height
-        @font       = "Sans-serif"
-        @pointsize  = 16
-    end
 
-    def download_image(url, output_path)
-        if !FileTest.exist?(output_path) then
-            URI.open(url) do |image|
-                if !Dir.exist?(File.dirname(output_path)) then
-                    Dir.mkdir(File.dirname(output_path))
-                end
-                File.open(output_path, 'wb') do |file|
-                    file.write(image.read)
-                end
-            end
-        end
-    end
-    def write_text_to_cairo_context(context, x, y, textArray)
-        textArray.each_with_index do |text, index|
-            context.move_to(x, y + ((index + 1) * @pointsize))
-            context.set_font_size(@pointsize)
-            context.select_font_face("IPAPGothic",
-                        Cairo::FONT_SLANT_NORMAL,
-                        Cairo::FONT_WEIGHT_NORMAL)
-            context.set_source_rgb(255,255,255)
-            context.show_text(text)
-        end
-        return
-    end
-    def write_image_and_text_to_cairo_context(context, x, y, image, textArray)
-        image = Cairo::ImageSurface.from_png(image)
-        context.set_source(image, x, y)
-        context.paint
-        write_text_to_cairo_context(context, x + image.width, y, textArray)
-        return image.height
-    end
-    def generate(input_json = "{}", output_path = "scorecard.png")
+    def initialize(input_json = "{}")
         param = JSON.parse(input_json)
-        surface = Cairo::ImageSurface.new(@width, @height)
-        context = Cairo::Context.new(surface)
-        y_offset = 10
 
-        # player info
+        # store player info
         player_id = "ID: #{param["player"]["uid"]}"
         player_name = "Name: #{param["player"]["nickname"]}"
-        player_icon_path = "#{param["player"]["avatar"]["icon"]}"
-        player_icon_url = "#{@domain}#{param["player"]["avatar"]["icon"]}"
-        download_image(player_icon_url, player_icon_path)
-        y_offset = write_image_and_text_to_cairo_context(context, 0, y_offset, player_icon_path, [player_id, player_name])
-        y_offset = y_offset + 10
+        @player_info = ScoreCardAnyCell.new(image_path: "#{param["player"]["avatar"]["icon"]}", text_array: [player_id, player_name])
 
-        # charactor info
+        # store charactor info
+        @character_info = []
         param["characters"].each_with_index do |charactor, index|
-            chara_icon_path = "#{charactor["icon"]}"
-            chara_icon_url = "#{@domain}#{charactor["icon"]}"
-            download_image(chara_icon_url, chara_icon_path)
-            chara_name = "Name: #{charactor["name"]}"
-            chara_level = "Level: #{charactor["level"]}"
-            chara_rank = "Rank: E#{charactor["rank"]}"
-            next_y_offset = y_offset + write_image_and_text_to_cairo_context(context, 0, y_offset, chara_icon_path, [chara_name, chara_level, chara_rank])
-            # statistics, attributes, additions, properties （ステータス）
+            this_character_info = []
+            # basic character info, statistics, attributes, additions, properties （ステータス）
+            string_array = []
+            string_array.push("Name: #{charactor["name"]}")
+            string_array.push("Level: #{charactor["level"]}")
+            string_array.push("Rank: E#{charactor["rank"]}")
             statistics = charactor["statistics"]
-            attributes = charactor["attributes"]
-            additions = charactor["additions"]
-            properties = charactor["properties"]
-            stringArray = []
             statistics.each do |statistic|
-                stat_name = statistic["name"]
-                stat_value = statistic["value"]
-                stat_value_disp = statistic["display"]
-                stat_percent = statistic["percent"]
-                if (stat_percent == true) then
-                    stringArray.push("#{stat_name}: #{stat_value_disp}")
-                else
-                    stringArray.push("#{stat_name}: #{stat_value}")
+                if (statistic["field"] == "spd") then
+                    string_array.push("速度値　　　　　　: #{statistic["value"]}")
                 end
             end
-            write_text_to_cairo_context(context, 450, y_offset, stringArray)
-            stringArray = []
+            attributes = charactor["attributes"]
             attributes.each do |attribute|
-                stat_name = attribute["name"]
-                stat_value = attribute["value"]
-                stat_value_disp = attribute["display"]
-                stat_percent = attribute["percent"]
-                if (stat_percent == true) then
-                    stringArray.push("#{stat_name}: #{stat_value_disp}")
-                else
-                    stringArray.push("#{stat_name}: #{stat_value}")
+                if (attribute["field"] == "spd") then
+                    string_array.push("基礎速度　　　　　: #{attribute["value"]}")
                 end
             end
-            write_text_to_cairo_context(context, 750, y_offset, stringArray)
-            stringArray = []
+            additions = charactor["additions"]
             additions.each do |addition|
-                stat_name = addition["name"]
-                stat_value = addition["value"]
-                stat_value_disp = addition["display"]
-                stat_percent = addition["percent"]
-                if (stat_percent == true) then
-                    stringArray.push("#{stat_name}: #{stat_value_disp}")
-                else
-                    stringArray.push("#{stat_name}: #{stat_value}")
+                if (addition["field"] == "spd") then
+                    string_array.push("速度補正値（全体）： #{addition["value"]}")
                 end
             end
-            write_text_to_cairo_context(context, 1050, y_offset, stringArray)
-            stringArray = []
+            properties = charactor["properties"]
             properties.each do |property|
-                stat_name = property["name"]
-                stat_value = property["value"]
-                stat_value_disp = property["display"]
-                stat_percent = property["percent"]
-                if (stat_percent == true) then
-                    stringArray.push("#{stat_name}: #{stat_value_disp}")
-                else
-                    stringArray.push("#{stat_name}: #{stat_value}")
+                if (property["field"] == "spd") then
+                    if (property["percent"] == true) then
+                        string_array.push("速度補正％（個別）: #{property["display"]}")
+                    else
+                        string_array.push("速度補正値（個別）: #{property["value"]}")
+                    end
                 end
             end
-            write_text_to_cairo_context(context, 1350, y_offset, stringArray)
+            this_character_info.push(ScoreCardAnyCell.new(image_path: "#{charactor["icon"]}", text_array: string_array))
             # skip: rank_icons (with chara_rank)
             # skip: path（運命）, element（属性）
-            # skills（スキル）
-            skills = charactor["skills"]
-            stringArray = []
-            skills.each_with_index do |skill, skill_index|
-                if (skill["type_text"].size > 0) then
-                    stringArray.push("#{skill["type_text"]}「#{skill["name"]}」：#{skill["level"]}/#{skill["max_level"]}")
-                end
-            end
-            write_text_to_cairo_context(context, 1650, y_offset, stringArray)
+            # skip: skills（スキル）
             # skip: skill_trees（軌跡）
+
             # light_cone（光円錐）
             light_cone = charactor["light_cone"]
-            stringArray = ["#{light_cone["name"]} Lv:#{light_cone["level"]} 重畳:#{light_cone["rank"]}"]
-            light_cone["attributes"].each do |attribute|
-                stringArray.push("#{attribute["name"]}：#{attribute["value"]}")
-            end
+            string_array = []
+            string_array.push("#{light_cone["name"]} Lv:#{light_cone["level"]} 重畳:#{light_cone["rank"]}")
+            # skip: light_cone["attributes"] -> 基礎HP/基礎攻撃力/基礎防御力のみのため速度は含まない
             light_cone["properties"].each do |property|
-                if (property["percent"] == true) then
-                    stringArray.push("#{property["name"]}：#{property["display"]}")
-                else
-                    stringArray.push("#{property["name"]}：#{property["value"]}")
-                end
-            end
-            write_text_to_cairo_context(context, 1950, y_offset, stringArray)
-            # relics
-            charactor["relics"].each_with_index do |relic, relic_index|
-                relic_icon_path = "#{relic["icon"]}"
-                relic_icon_url = "#{@domain}#{relic["icon"]}"
-                download_image(relic_icon_url, relic_icon_path)
-                stringArray = ["#{relic["name"]}（#{relic["set_name"]}） Lv:#{relic["level"]}"]
-                if (relic["main_affix"]["percent"] == true) then
-                    stringArray.push("メイン #{relic["main_affix"]["name"]}：#{relic["main_affix"]["display"]}")
-                else
-                    stringArray.push("メイン #{relic["main_affix"]["name"]}：#{relic["main_affix"]["value"]}")
-                end
-                relic["sub_affix"].each do |affix|
-                    if (relic["main_affix"]["percent"] == true) then
-                        stringArray.push("　サブ #{affix["name"]}：#{affix["display"]}")
-                    else
-                        stringArray.push("　サブ #{affix["name"]}：#{affix["value"]}")
-                    end
-                end
-                write_image_and_text_to_cairo_context(context, 2300 + 600 * relic_index, y_offset, relic_icon_path, stringArray)
-            end
-            # TODO: relic_sets
-            stringArray = ["＜セット効果＞"]
-            charactor["relic_sets"].each do |effect|
-                effect["properties"].each do |property|
+                if (property["field"] == "spd") then
                     if (property["percent"] == true) then
-                        stringArray.push("・#{effect["name"]}（#{effect["num"]}セット）：#{property["name"]}#{property["display"]}")
+                        stringArray.push("#{property["name"]}：#{property["display"]}")
                     else
-                        stringArray.push("・#{effect["name"]}（#{effect["num"]}セット）：#{property["name"]}#{property["value"]}")
+                        stringArray.push("#{property["name"]}：#{property["value"]}")
                     end
                 end
             end
-            write_text_to_cairo_context(context, 5900, y_offset, stringArray)
-            # update y_offset and goto next charactor
-            y_offset = next_y_offset + 10
+            if (string_array.length > 1) then
+                this_character_info.push(ScoreCardAnyCell.new(image_path: "#{light_cone["icon"]}", text_array: string_array))
+            end
+
+            # relics（遺物、オーナメント）
+            relics = charactor["relics"]
+            relics.each do |relic|
+                string_array = ["#{relic["name"]}（#{relic["set_name"]}） Lv:#{relic["level"]}"]
+                relic_icon_path = "#{relic["icon"]}"
+                main_affix = relic["main_affix"]
+                if (main_affix["field"] == "spd") then
+                    if (relic["main_affix"]["percent"] == true) then
+                        string_array.push("メイン #{relic["main_affix"]["name"]}：#{relic["main_affix"]["display"]}")
+                    else
+                        string_array.push("メイン #{relic["main_affix"]["name"]}：#{relic["main_affix"]["value"]}")
+                    end
+                end
+                relic["sub_affix"].each do |sub_affix|
+                    if (sub_affix["field"] == "spd") then
+                        if (sub_affix["percent"] == true) then
+                            string_array.push("　サブ #{sub_affix["name"]}：#{sub_affix["display"]}")
+                        else
+                            string_array.push("　サブ #{sub_affix["name"]}：#{sub_affix["value"]}")
+                        end
+                    end
+                end
+                this_character_info.push(ScoreCardAnyCell.new(image_path: relic_icon_path, text_array: string_array))
+            end
+
+            # relic_sets（遺物セット効果、オーナメント含む）
+            relic_sets = charactor["relic_sets"]
+            string_array = []
+            relic_sets.each do |effect|
+                effect["properties"].each do |property|
+                    if (property["field"] == "spd") then
+                        if (property["percent"] == true) then
+                            this_character_info.push(ScoreCardAnyCell.new(image_path: "#{effect["icon"]}",
+                                                     text_array: ["#{effect["name"]}（#{effect["num"]}セット）：#{property["name"]}#{property["display"]}"]))
+                        else
+                            this_character_info.push(ScoreCardAnyCell.new(image_path: "#{effect["icon"]}",
+                                                     text_array: ["#{effect["name"]}（#{effect["num"]}セット）：#{property["name"]}#{property["value"]}"]))
+                        end
+                    end
+                end
+            end
+
+            @character_info.push(this_character_info)
+        end
+    end
+
+    def generate(output_path = "scorecard.png")
+        x_offset = 10
+        y_offset = 10
+
+        # calc image size
+        player_area_size = @player_info.calc_cell_area()
+        width = x_offset + player_area_size[:x] + x_offset
+        height = y_offset + player_area_size[:y] + y_offset
+        character_area_total_width = 0
+        @character_info.each do |this_character_info|
+            character_area_total_height = 0
+            this_character_area_max_width = 0
+            this_character_info.each do |this_info|
+                area_size = this_info.calc_cell_area()
+                character_area_total_height += area_size[:y] + y_offset
+                if (this_character_area_max_width < area_size[:x] + x_offset) then
+                    this_character_area_max_width = area_size[:x] + x_offset
+                end
+            end
+            if (height < y_offset + player_area_size[:y] + y_offset + character_area_total_height) then
+                height = y_offset + player_area_size[:y] + y_offset + character_area_total_height
+            end
+            character_area_total_width += this_character_area_max_width
+        end
+        if (width < x_offset + character_area_total_width) then
+            width = x_offset + character_area_total_width
+        end
+
+        # render cells
+        offset = {x:x_offset, y:y_offset};
+        surface = Cairo::ImageSurface.new(width, height)
+        context = Cairo::Context.new(surface)
+
+        @player_info.render_cell_area(context, offset)
+        area_size = @player_info.calc_cell_area()
+        offset[:y] += area_size[:y] + y_offset
+        @character_info.each do |this_character_info|
+            next_offset_x = 0
+            next_offset_y = 0
+            this_character_info.each do |this_info|
+                area_size = this_info.calc_cell_area()
+                this_offset = {x: offset[:x], y: offset[:y] + next_offset_y}
+                this_info.render_cell_area(context, this_offset)
+                next_offset_x = next_offset_x < area_size[:x] ? area_size[:x] : next_offset_x
+                next_offset_y += area_size[:y] + y_offset
+            end
+            offset[:x] += next_offset_x + x_offset
         end
 
         surface.write_to_png(output_path)
