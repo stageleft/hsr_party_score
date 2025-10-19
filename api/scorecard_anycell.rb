@@ -18,6 +18,8 @@ class ScoreCardAnyCell
                     Cairo::FONT_WEIGHT_NORMAL)
         @context.set_source_rgb(255,255,255)
         @text_array = text_array
+        @internal_x_offset = 8
+        @internal_y_offset = 4
         @area_size = calc_cell_area()
     end
     def download_image(url, output_path)
@@ -37,12 +39,12 @@ class ScoreCardAnyCell
         text_area_height = 0
         @text_array.each do |text|
             extents = @context.text_extents(text)
-            text_area_height = text_area_height + extents.height
+            text_area_height = text_area_height + extents.height + @internal_y_offset
             if text_area_width < extents.width then
                 text_area_width = extents.width
             end
         end
-        return {x: @image.width + text_area_width, y: (@image.height > text_area_height ? @image.height : text_area_height)} 
+        return {x: @image.width + @internal_x_offset + text_area_width, y: (@image.height > text_area_height ? @image.height : text_area_height)} 
     end
     def render_cell_area(base_context, pos)
         base_context.set_source(@image, pos[:x], pos[:y])
@@ -52,12 +54,12 @@ class ScoreCardAnyCell
                     Cairo::FONT_SLANT_NORMAL,
                     Cairo::FONT_WEIGHT_NORMAL)
         base_context.set_source_rgb(255,255,255)
-        x_offset = pos[:x] + @image.width
+        x_offset = pos[:x] + @image.width + @internal_x_offset
         y_offset = pos[:y]
         @text_array.each do |text|
             base_context.move_to(x_offset, y_offset + base_context.text_extents(text).height)
             base_context.show_text(text)
-            y_offset = y_offset + base_context.text_extents(text).height
+            y_offset = y_offset + base_context.text_extents(text).height + @internal_y_offset
         end
     end
 end
