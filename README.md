@@ -6,9 +6,8 @@
 
 ## ver.1 要求事項
 
-* UIを用いて、UIDおよび言語を指定し、「データ取得」ボタンを押下する。
 * 巡星ビザ（サポートキャラ、星海同伴）に設定したキャラのステータスを Mihomo API から取得する。
-  `curl -X GET https://api.mihomo.me/sr_info_parsed/{uid}?language={lg} -H User-Agent: hsr_party_score` 相当のクエリを実行する。
+  `curl -X GET https://api.mihomo.me/sr_info_parsed/{uid}?language={lg} -H User-Agent: hsr_party_score` 相当のクエリを手動で実行する。
   詳細は https://march7th.xyz/en/ から、 MiHoMo API > Parsed Data API を参照。
 * 取得した最大8キャラクター分のデータをもとに、ステータスを記載した画像ファイルを出力する。これをパーティーカードと呼ぶ。
 
@@ -34,6 +33,7 @@
 
 ## ver.4 要求事項
 
+* UIを用いて、UIDおよび言語を指定し、「データ取得」ボタンを押下する。
 * ver.3 のJSONデータについて、プログラム外の特定の箇所に、1編成あたり1つのファイルとして持つ。
 * 上記JSONデータ編集のため、エディタ機能を持つ。
 
