@@ -21,34 +21,34 @@ class ScoreCard
             this_character_info = []
             # basic character info, statistics, attributes, additions, properties （ステータス）
             string_array = []
-            string_array.push("Name: #{charactor["name"]}")
-            string_array.push("Level: #{charactor["level"]}")
-            string_array.push("Rank: E#{charactor["rank"]}")
+            string_array.push("名前　: #{charactor["name"]}")
+            string_array.push("レベル: #{charactor["level"]}")
+            string_array.push("星魂　:E#{charactor["rank"]}")
             statistics = charactor["statistics"]
             statistics.each do |statistic|
                 if (statistic["field"] == "spd") then
-                    string_array.push("速度値　　　　　　: #{statistic["value"]}")
+                    string_array.push("速度値　　　　　: #{statistic["value"]}")
                 end
             end
             attributes = charactor["attributes"]
             attributes.each do |attribute|
                 if (attribute["field"] == "spd") then
-                    string_array.push("基礎速度　　　　　: #{attribute["value"]}")
+                    string_array.push("基礎速度　　　　: #{attribute["value"]}")
                 end
             end
             additions = charactor["additions"]
             additions.each do |addition|
                 if (addition["field"] == "spd") then
-                    string_array.push("速度補正値（全体）： #{addition["value"]}")
+                    string_array.push("速度補正値＠全体： #{addition["value"]}")
                 end
             end
             properties = charactor["properties"]
             properties.each do |property|
                 if (property["field"] == "spd") then
                     if (property["percent"] == true) then
-                        string_array.push("速度補正％（個別）: #{property["display"]}")
+                        string_array.push("速度補正％＠個別: #{property["display"]}")
                     else
-                        string_array.push("速度補正値（個別）: #{property["value"]}")
+                        string_array.push("速度補正値＠個別: #{property["value"]}")
                     end
                 end
             end
@@ -84,17 +84,17 @@ class ScoreCard
                 main_affix = relic["main_affix"]
                 if (main_affix["field"] == "spd") then
                     if (relic["main_affix"]["percent"] == true) then
-                        string_array.push("メイン #{relic["main_affix"]["name"]}：#{relic["main_affix"]["display"]}")
+                        string_array.push("　メイン #{relic["main_affix"]["name"]}：#{relic["main_affix"]["display"]}")
                     else
-                        string_array.push("メイン #{relic["main_affix"]["name"]}：#{relic["main_affix"]["value"]}")
+                        string_array.push("　メイン #{relic["main_affix"]["name"]}：#{relic["main_affix"]["value"]}")
                     end
                 end
                 relic["sub_affix"].each do |sub_affix|
                     if (sub_affix["field"] == "spd") then
                         if (sub_affix["percent"] == true) then
-                            string_array.push("　サブ #{sub_affix["name"]}：#{sub_affix["display"]}")
+                            string_array.push("　サブ　 #{sub_affix["name"]}：#{sub_affix["display"]}")
                         else
-                            string_array.push("　サブ #{sub_affix["name"]}：#{sub_affix["value"]}")
+                            string_array.push("　サブ　 #{sub_affix["name"]}：#{sub_affix["value"]}")
                         end
                     end
                 end
