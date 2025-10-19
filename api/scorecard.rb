@@ -137,38 +137,46 @@ class ScoreCard
     relic_sets_cells
   end
 
-  def char_area_width(x_offset)
-    total_width = x_offset
-    @list_character.each do |this_character_info|
-      max_width = 0
-      this_character_info.each do |this_info|
-        area_size = this_info.calc_cell_area
-        max_width = [max_width, area_size[:x]].max
-      end
-      total_width += max_width + x_offset
+  def char_area_width(this_character_info)
+    area_width = [0]
+    this_character_info.each do |this_info|
+      area_width.push(this_info.calc_cell_area[:x])
     end
-    total_width
+    area_width.max
   end
 
-  def char_area_height(y_offset)
-    max_height = 0
+  def char_area_all_width(x_offset)
+    area_width = [x_offset]
     @list_character.each do |this_character_info|
-      total_height = 0
-      this_character_info.each do |this_info|
-        area_size = this_info.calc_cell_area
-        total_height += area_size[:y] + y_offset
-      end
-      max_height = [max_height, total_height].max
+      area_width.push(char_area_width(this_character_info))
+      area_width.push(x_offset)
     end
-    max_height
+    area_width.sum
+  end
+
+  def char_area_height(this_character_info, y_offset)
+    area_height = [0]
+    this_character_info.each do |this_info|
+      area_height.push(this_info.calc_cell_area[:y])
+      area_height.push(y_offset)
+    end
+    area_height.sum
+  end
+
+  def char_area_all_height(y_offset)
+    area_height = [0]
+    @list_character.each do |this_character_info|
+      area_height.push(char_area_height(this_character_info, y_offset))
+    end
+    area_height.max
   end
 
   def image_size(x_offset, y_offset)
     player_area_size = @player_info.calc_cell_area
     player_area_width = x_offset + player_area_size[:x] + x_offset
     player_area_height = y_offset + player_area_size[:y] + y_offset
-    { width: [player_area_width, char_area_width(x_offset)].max,
-      height: player_area_height + char_area_height(y_offset) }
+    { width: [player_area_width, char_area_all_width(x_offset)].max,
+      height: player_area_height + char_area_all_height(y_offset) }
   end
 
   def render_character_area(context, offset, y_padding, this_character_info)
@@ -182,15 +190,6 @@ class ScoreCard
     end
   end
 
-  def calc_char_area_width(this_character_info)
-    width = 0
-    this_character_info.each do |this_info|
-      area_size = this_info.calc_cell_area
-      width = width < area_size[:x] ? area_size[:x] : width
-    end
-    width
-  end
-
   def render_card(context, offset)
     @player_info.render_cell_area(context, offset)
     area_size = @player_info.calc_cell_area
@@ -198,7 +197,7 @@ class ScoreCard
     char_area_offset = { x: offset[:x], y: offset[:y] + (area_size[:y] + offset[:y]) }
     @list_character.each do |this_character_info|
       render_character_area(context, char_area_offset, offset[:y], this_character_info)
-      char_area_offset[:x] += calc_char_area_width(this_character_info) + offset[:x]
+      char_area_offset[:x] += char_area_width(this_character_info) + offset[:x]
     end
   end
 
