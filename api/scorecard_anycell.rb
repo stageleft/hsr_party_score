@@ -33,28 +33,27 @@ class ScoreCardAnyCell
 
     URI.parse(url).open do |image|
       FileUtils.mkdir_p(File.dirname(output_path))
-      File.open(output_path, 'wb') do |file|
-        file.write(image.read)
-      end
+      File.binwrite(output_path, image.read)
     end
   end
 
   def calc_cell_width
-    text_area_width = 0
+    text_area_width = [0]
     @text_array.each do |text|
       extents = @context.text_extents(text)
-      text_area_width = extents.width if text_area_width < extents.width
+      text_area_width.push(extents.width)
     end
-    @image.width + @internal_x_offset + text_area_width
+    [@image.width, @internal_x_offset, text_area_width.max].sum
   end
 
   def calc_cell_height
-    text_area_height = 0
+    text_area_height = [0]
     @text_array.each do |text|
       extents = @context.text_extents(text)
-      text_area_height = text_area_height + extents.height + @internal_y_offset
+      text_area_height.push(extents.height)
+      text_area_height.push(@internal_y_offset)
     end
-    @image.height > text_area_height ? @image.height : text_area_height
+    [@image.height, text_area_height.sum].max
   end
 
   def calc_cell_area
