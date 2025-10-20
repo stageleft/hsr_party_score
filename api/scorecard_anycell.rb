@@ -14,14 +14,18 @@ class ScoreCardAnyCell
     @image = Cairo::ImageSurface.from_png(image_path)
     # setup text context
     @context = Cairo::Context.new(@image)
-    @context.set_font_size(16)
-    @context.select_font_face('IPAPGothic',
-                              Cairo::FONT_SLANT_NORMAL,
-                              Cairo::FONT_WEIGHT_NORMAL)
-    @context.set_source_rgb(255, 255, 255)
+    font_setup(@context)
     @text_array = text_array
     @internal_x_offset = 8
     @internal_y_offset = 4
+  end
+
+  def font_setup(context)
+    context.set_font_size(16)
+    context.select_font_face('IPAPGothic',
+                             Cairo::FONT_SLANT_NORMAL,
+                             Cairo::FONT_WEIGHT_NORMAL)
+    context.set_source_rgb(255, 255, 255)
   end
 
   def download_image(url, output_path)
@@ -58,11 +62,7 @@ class ScoreCardAnyCell
   end
 
   def render_cell_text(base_context, x_offset, y_offset)
-    base_context.set_font_size(16)
-    base_context.select_font_face('IPAPGothic',
-                                  Cairo::FONT_SLANT_NORMAL,
-                                  Cairo::FONT_WEIGHT_NORMAL)
-    base_context.set_source_rgb(255, 255, 255)
+    font_setup(base_context)
     @text_array.each do |text|
       base_context.move_to(x_offset, y_offset + base_context.text_extents(text).height)
       base_context.show_text(text)
