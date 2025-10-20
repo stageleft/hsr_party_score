@@ -56,7 +56,7 @@ class ScoreCardAnyCell
     [@image.height, text_area_height.sum].max
   end
 
-  def calc_cell_area
+  def calc_area
     { x: calc_cell_width, y: calc_cell_height }
   end
 
@@ -69,7 +69,7 @@ class ScoreCardAnyCell
     end
   end
 
-  def render_cell_area(base_context, pos)
+  def render_area(base_context, pos)
     base_context.set_source(@image, pos[:x], pos[:y])
     base_context.paint
     render_cell_text(base_context, pos[:x] + @image.width + @internal_x_offset, pos[:y])

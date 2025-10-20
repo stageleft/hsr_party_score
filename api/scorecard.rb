@@ -140,7 +140,7 @@ class ScoreCard
   def char_area_width(this_character_info)
     area_width = [0]
     this_character_info.each do |this_info|
-      area_width.push(this_info.calc_cell_area[:x])
+      area_width.push(this_info.calc_area[:x])
     end
     area_width.max
   end
@@ -157,7 +157,7 @@ class ScoreCard
   def char_area_height(this_character_info, y_offset)
     area_height = [0]
     this_character_info.each do |this_info|
-      area_height.push(this_info.calc_cell_area[:y])
+      area_height.push(this_info.calc_area[:y])
       area_height.push(y_offset)
     end
     area_height.sum
@@ -172,7 +172,7 @@ class ScoreCard
   end
 
   def image_size(x_offset, y_offset)
-    player_area_size = @player_info.calc_cell_area
+    player_area_size = @player_info.calc_area
     player_area_width = x_offset + player_area_size[:x] + x_offset
     player_area_height = y_offset + player_area_size[:y] + y_offset
     { width: [player_area_width, char_area_all_width(x_offset)].max,
@@ -183,16 +183,16 @@ class ScoreCard
     x_pos = offset[:x]
     y_pos = offset[:y]
     this_character_info.each do |this_info|
-      area_size = this_info.calc_cell_area
+      area_size = this_info.calc_area
       this_offset = { x: x_pos, y: y_pos }
-      this_info.render_cell_area(context, this_offset)
+      this_info.render_area(context, this_offset)
       y_pos += area_size[:y] + y_padding
     end
   end
 
   def render_card(context, offset)
-    @player_info.render_cell_area(context, offset)
-    area_size = @player_info.calc_cell_area
+    @player_info.render_area(context, offset)
+    area_size = @player_info.calc_area
 
     char_area_offset = { x: offset[:x], y: offset[:y] + (area_size[:y] + offset[:y]) }
     @list_character.each do |this_character_info|
