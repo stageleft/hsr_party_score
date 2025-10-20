@@ -27,7 +27,7 @@ class ScoreCardAnyCell
   def download_image(url, output_path)
     return if FileTest.exist?(output_path)
 
-    URI.open(url) do |image|
+    URI.parse(url).open do |image|
       FileUtils.mkdir_p(File.dirname(output_path))
       File.open(output_path, 'wb') do |file|
         file.write(image.read)
