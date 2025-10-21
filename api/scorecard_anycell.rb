@@ -6,7 +6,7 @@
 # [1 image] multi-line text
 # [       ] multi-line text
 class ScoreCardAnyCell
-  def initialize(image_path: '', text_array: [''])
+  def initialize(image_path, text_array)
     # setup image
     @domain = 'https://raw.githubusercontent.com/Mar-7th/StarRailRes/refs/heads/master/'
     url = "#{@domain}#{image_path}"
