@@ -3,13 +3,11 @@ FROM ruby:latest
 RUN gem install rackup sinatra puma
 RUN gem install open-uri cairo
 
-COPY views ./views
+WORKDIR /opt/hsr_party_score
 
 COPY api ./api
 
 COPY public ./public
-
-COPY data ./data
 
 EXPOSE 80
 

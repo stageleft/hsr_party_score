@@ -1,0 +1,10 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/stageleft/hsrpartyscore:latest
+    container_name: hsrpartyscore
+    restart: unless-stopped
+    ports:
+      - "80:80"
