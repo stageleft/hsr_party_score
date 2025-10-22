@@ -1,5 +1,7 @@
 FROM ruby:latest
 
+RUN apt update && apt install -y fonts-ipafont
+
 RUN gem install rackup sinatra puma
 RUN gem install open-uri cairo
 
