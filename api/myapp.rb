@@ -8,9 +8,17 @@ get '/' do
     send_file './public/index.html'
 end
 
-get '/generate/:uid' do
-    uid = params['type'] || '827841944'
-    partycard = PartyCard.new(ScoreFromMiHoMo.new(uid).fetch_data)
+get '/generate' do
+    unless params[:uid] =~ /^\d{1,16}$/
+        return "Invalid UID. Please provide a valid digit UID."
+    end
+
+    uid = params[:uid] || '827841944'
+    lang = params[:lang] || 'jp'
+    puts "Getting Status from MiHoMo API for UID: #{uid} with language: #{lang}..."
+    partycard = PartyCard.new(ScoreFromMiHoMo.new(uid, lang).fetch_data)
+    puts "Generating party card image started.."
     partycard.generate('output_scorecard.png')
+    puts "Generating party card image finished."
     send_file 'output_scorecard.png', type: :png, disposition: 'inline'
 end

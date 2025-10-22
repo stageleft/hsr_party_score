@@ -5,16 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HSR Party Score</title>
     <link rel="stylesheet" href="styles.css">
+    <script>   
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('download').addEventListener('click', () => {
+                const uid = document.getElementById('uid').value;
+                const lang = document.getElementById('language').value;
+                window.location.href = `/generate?uid=${uid}&lang=${lang}`;
+            });
+        });
+    </script>
 </head>
 <body>
     <h1>Welcome to HSR Party Score</h1>
     <p>This is the web interface for HSR Party Score application.</p>
-    <input type="text" id="uid" placeholder="Enter UID">
-    <select id="language">
-        <option value="en">English</option>
-        <option value="jp">Japanese</option>
-        <option value="cn">Chinese</option>
-    </select>
-    <button id="fetchData">Fetch Data</button>
+    <p>
+        <input type="text" id="uid" placeholder="Enter UID">
+    </p>
+    <p>
+        <select id="language">
+            <option value="en">English</option>
+            <option value="jp" selected>Japanese</option>
+        </select>
+    </p>
+    <p>
+        <a id="download">[ Click here to download Party Card ]</button>
+    </p>
 </body>
 </html>
