@@ -71,6 +71,25 @@ class ScoreCard
       height: player_area_height + char_area_all_height(y_offset) }
   end
 
+  def render_character_area_background(context, offset, y_padding, this_character_info)
+
+    x_pos = offset[:x]
+    y_pos = offset[:y]
+    width = char_area_width(this_character_info)
+    this_character_info.each do |this_info|
+      area_size = this_info.calc_area
+      this_offset = { x: x_pos, y: y_pos }
+      height = area_size[:y]
+
+      this_info.render_area(context, this_offset)
+      context.set_source_rgb(0, 0, 0.1)
+      context.rectangle(x_pos, y_pos, width, height)
+      context.fill
+
+      y_pos += area_size[:y] + y_padding
+    end
+  end
+
   def render_character_area(context, offset, y_padding, this_character_info)
     x_pos = offset[:x]
     y_pos = offset[:y]
@@ -88,6 +107,7 @@ class ScoreCard
 
     char_area_offset = { x: offset[:x], y: offset[:y] + (area_size[:y] + offset[:y]) }
     @unit_info.each do |this_character_info|
+      render_character_area_background(context, char_area_offset, offset[:y], this_character_info)
       render_character_area(context, char_area_offset, offset[:y], this_character_info)
       char_area_offset[:x] += char_area_width(this_character_info) + offset[:x]
     end

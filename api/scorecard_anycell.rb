@@ -22,7 +22,7 @@ class ScoreCardAnyCell
 
   def font_setup(context)
     context.set_font_size(16)
-    context.select_font_face('IPAPGothic',
+    context.select_font_face('IPAGothic',
                              Cairo::FONT_SLANT_NORMAL,
                              Cairo::FONT_WEIGHT_NORMAL)
     context.set_source_rgb(255, 255, 255)
@@ -69,9 +69,20 @@ class ScoreCardAnyCell
     end
   end
 
-  def render_area(base_context, pos)
-    base_context.set_source(@image, pos[:x], pos[:y])
+  def render_cell_image(base_context, image, x_offset, y_offset)
+    base_context.set_source(image, x_offset, y_offset)
     base_context.paint
+  end
+
+  def render_cell_background(base_context, x_offset, y_offset)
+    base_context.set_source_rgb(0, 0, 0)
+    base_context.rectangle(x_offset, y_offset, calc_cell_width, calc_cell_height)
+    base_context.fill
+  end
+
+  def render_area(base_context, pos)
+    render_cell_background(base_context, pos[:x], pos[:y])
+    render_cell_image(base_context, @image, pos[:x], pos[:y])
     render_cell_text(base_context, pos[:x] + @image.width + @internal_x_offset, pos[:y])
   end
 end
