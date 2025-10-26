@@ -42,7 +42,7 @@ class PartyCard < ScoreCard
     string_array = [
       "名前　: #{character['name']}",
       "レベル: #{character['level']}",
-      "星魂　:E#{character['rank']}"
+      "星魂　: E#{character['rank']}"
     ]
     string_array.concat(string_character_spd(character['statistics'],
                                              character['attributes'],
@@ -57,7 +57,7 @@ class PartyCard < ScoreCard
     [statistics, attributes, additions].flatten.each do |element|
       next unless element['field'] == 'spd'
 
-      string_array.push("#{element['name']}　　　　　　: #{element['value']}")
+      string_array.push("#{element['name']}　　　　　　: #{sprintf("%.3f", element['value']).rjust(7)}")
     end
     string_array
   end
@@ -69,9 +69,9 @@ class PartyCard < ScoreCard
       next unless property['field'] == 'spd'
 
       if property['percent'] == true
-        string_array.push("速度補正％＠個別: #{property['display']}")
+        string_array.push("速度補正％＠個別: #{property['display'].rjust(7)}")
       else
-        string_array.push("速度補正値＠個別: #{property['value']}")
+        string_array.push("速度補正値＠個別: #{sprintf("%3.3f", property['value']).rjust(7)}")
       end
     end
     string_array
@@ -84,19 +84,19 @@ class PartyCard < ScoreCard
     light_cone['properties'].each do |property|
       next unless property['field'] == 'spd'
 
-      string_array.push("#{property['name']}：#{property['percent'] == true ? property['display'] : property['value']}")
+      string_array.push("#{property['name']}：#{property['percent'] == true ? property['display'] : sprintf("%.3f", property['value'])}")
     end
     string_array.length > 1 ? [{ image: light_cone['icon'], text: string_array }] : []
   end
 
   # relics（遺物、オーナメント）
   def string_relics_main(main_affix)
-    ["メイン　#{main_affix['name']}：#{main_affix['percent'] == true ? main_affix['display'] : main_affix['value']}"]
+    ["メイン　#{main_affix['name']}：#{main_affix['percent'] == true ? main_affix['display'] : sprintf("%.3f", main_affix['value'])}"]
   end
 
   def string_relics_sub(sub_affix)
     sub_affix.map do |sub|
-      "　サブ　#{sub['name']}：#{sub['percent'] == true ? sub['display'] : sub['value']}"
+      "　サブ　#{sub['name']}：#{sub['percent'] == true ? sub['display'] : sprintf("%.3f", sub['value'])}"
     end
   end
 
@@ -117,7 +117,7 @@ class PartyCard < ScoreCard
     relic_sets.each do |effect|
       text = ["#{effect['name']}（#{effect['num']}セット）"]
       effect['properties'].each do |prop|
-        text.push("　#{prop['name']}#{prop['percent'] == true ? prop['display'] : prop['value']}")
+        text.push("　#{prop['name']}#{prop['percent'] == true ? prop['display'] : sprintf("%.3f", prop['value'])}")
         relic_sets_cells.push({ image: effect['icon'], text: text })
       end
     end
