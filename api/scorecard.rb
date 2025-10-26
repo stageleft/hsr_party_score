@@ -116,14 +116,13 @@ class ScoreCard
 
     canvas = image_size(x_offset, y_offset)
 
-    offset = { x: x_offset, y: y_offset }
     surface = Cairo::ImageSurface.new(canvas[:width], canvas[:height])
     context = Cairo::Context.new(surface)
     context.set_source_rgb(0, 0.1, 0.1)
     context.rectangle(0, 0, canvas[:width], canvas[:height])
     context.fill
 
-    render_card(context, offset)
+    render_card(context, { x: x_offset, y: y_offset })
 
     surface.write_to_png(output_path)
   end
