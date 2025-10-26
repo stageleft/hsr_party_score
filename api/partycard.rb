@@ -44,37 +44,34 @@ class PartyCard < ScoreCard
       "レベル: #{character['level']}",
       "星魂　: E#{character['rank']}"
     ]
-    string_array.concat(string_character_spd(character['statistics'],
-                                             character['attributes'],
-                                             character['additions']))
-    string_array.concat(strings_character_prop(character['properties']))
+    string_array.concat(string_character_total_spd(character['statistics']))
+    string_array.concat(string_character_base_spd(character['attributes']))
+    string_array.concat(string_character_additional_spd(character['additions']))
     { image: character['icon'], text: string_array }
   end
 
   # statistics, attributes, additions（ステータス）
-  def string_character_spd(statistics, attributes, additions)
-    string_array = []
-    [statistics, attributes, additions].flatten.each do |element|
-      next unless element['field'] == 'spd'
-
-      string_array.push("#{element['name']}　　　　　　: #{sprintf("%.3f", element['value']).rjust(7)}")
+  def string_character_total_spd(statistics)
+    statistics.each do |element|
+      return ["速度値　　: #{format('%.3f', element['value']).rjust(7)}"] if element['field'] == 'spd'
     end
-    string_array
+    []
   end
 
-  # properties（ステータス）
-  def strings_character_prop(properties)
-    string_array = []
-    properties.each do |property|
-      next unless property['field'] == 'spd'
-
-      if property['percent'] == true
-        string_array.push("速度補正％＠個別: #{property['display'].rjust(7)}")
-      else
-        string_array.push("速度補正値＠個別: #{sprintf("%3.3f", property['value']).rjust(7)}")
-      end
+  # statistics, attributes, additions（ステータス）
+  def string_character_base_spd(attributes)
+    attributes.each do |element|
+      return ["基礎速度　: #{format('%.3f', element['value']).rjust(7)}"] if element['field'] == 'spd'
     end
-    string_array
+    []
+  end
+
+  # statistics, attributes, additions（ステータス）
+  def string_character_additional_spd(additions)
+    additions.each do |element|
+      return ["速度補正値: #{format('%.3f', element['value']).rjust(7)}"] if element['field'] == 'spd'
+    end
+    []
   end
 
   # light_cone（光円錐）
@@ -84,19 +81,19 @@ class PartyCard < ScoreCard
     light_cone['properties'].each do |property|
       next unless property['field'] == 'spd'
 
-      string_array.push("#{property['name']}：#{property['percent'] == true ? property['display'] : sprintf("%.3f", property['value'])}")
+      string_array.push("#{property['name']}：#{percent_display_value(property)}")
     end
     string_array.length > 1 ? [{ image: light_cone['icon'], text: string_array }] : []
   end
 
   # relics（遺物、オーナメント）
   def string_relics_main(main_affix)
-    ["メイン　#{main_affix['name']}：#{main_affix['percent'] == true ? main_affix['display'] : sprintf("%.3f", main_affix['value'])}"]
+    ["メイン　#{main_affix['name']}：#{percent_display_value(main_affix)}"]
   end
 
   def string_relics_sub(sub_affix)
     sub_affix.map do |sub|
-      "　サブ　#{sub['name']}：#{sub['percent'] == true ? sub['display'] : sprintf("%.3f", sub['value'])}"
+      "　サブ　#{sub['name']}：#{percent_display_value(sub)}"
     end
   end
 
@@ -117,10 +114,14 @@ class PartyCard < ScoreCard
     relic_sets.each do |effect|
       text = ["#{effect['name']}（#{effect['num']}セット）"]
       effect['properties'].each do |prop|
-        text.push("　#{prop['name']}#{prop['percent'] == true ? prop['display'] : sprintf("%.3f", prop['value'])}")
+        text.push("　#{prop['name']}#{percent_display_value(prop)}")
         relic_sets_cells.push({ image: effect['icon'], text: text })
       end
     end
     relic_sets_cells
+  end
+
+  def percent_display_value(field)
+    field['percent'] == true ? field['display'] : format('%.3f', field['value'])
   end
 end
