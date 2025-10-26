@@ -88,6 +88,7 @@ class ScoreCard
   end
 
   def render_character_area(context, offset, y_padding, this_character_info)
+    render_character_area_background(context, offset, y_padding, this_character_info)
     x_pos = offset[:x]
     y_pos = offset[:y]
     this_character_info.each do |this_info|
@@ -101,10 +102,8 @@ class ScoreCard
   def render_card(context, offset)
     @player_info.render_area(context, offset)
 
-    area_size = @player_info.calc_area
-    char_area_offset = { x: offset[:x], y: offset[:y] + (area_size[:y] + offset[:y]) }
+    char_area_offset = { x: offset[:x], y: offset[:y] + (@player_info.calc_area[:y] + offset[:y]) }
     @unit_info.each do |this_character_info|
-      render_character_area_background(context, char_area_offset, offset[:y], this_character_info)
       render_character_area(context, char_area_offset, offset[:y], this_character_info)
       char_area_offset[:x] += char_area_width(this_character_info) + offset[:x]
     end
