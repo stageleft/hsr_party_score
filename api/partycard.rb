@@ -91,19 +91,13 @@ class PartyCard < ScoreCard
 
   # relics（遺物、オーナメント）
   def string_relics_main(main_affix)
-    if main_affix['field'] == 'spd'
-      ["　メイン #{main_affix['name']}：#{main_affix['percent'] == true ? main_affix['display'] : main_affix['value']}"]
-    else
-      []
-    end
+    ["メイン　#{main_affix['name']}：#{main_affix['percent'] == true ? main_affix['display'] : main_affix['value']}"]
   end
 
   def string_relics_sub(sub_affix)
     string_array = []
     sub_affix.each do |sub|
-      next unless sub['field'] == 'spd'
-
-      string_array.push("　サブ　 #{sub['name']}：#{sub['percent'] == true ? sub['display'] : sub['value']}")
+      string_array.push("　サブ　#{sub['name']}：#{sub['percent'] == true ? sub['display'] : sub['value']}")
     end
     string_array
   end
@@ -111,7 +105,7 @@ class PartyCard < ScoreCard
   def params_relics(relics)
     relics_cells = []
     relics.each do |relic|
-      string_array = ["#{relic['name']}（#{relic['set_name']}） Lv:#{relic['level']}"]
+      string_array = ["#{relic['name']} Lv:#{relic['level']}"]
       string_array.concat(string_relics_main(relic['main_affix']))
       string_array.concat(string_relics_sub(relic['sub_affix']))
       relics_cells.push({ image: relic['icon'], text: string_array })
@@ -124,11 +118,11 @@ class PartyCard < ScoreCard
     relic_sets_cells = []
     relic_sets.each do |effect|
       effect['properties'].each do |prop|
-        next unless prop['field'] == 'spd'
-
-        text = "#{effect['name']}（#{effect['num']}セット）：" \
-               "#{prop['name']}#{prop['percent'] == true ? prop['display'] : prop['value']}"
-        relic_sets_cells.push({ image: effect['icon'], text: [text] })
+        text = [
+          "#{effect['name']}（#{effect['num']}セット）",
+          "　#{prop['name']}#{prop['percent'] == true ? prop['display'] : prop['value']}"
+        ]
+        relic_sets_cells.push({ image: effect['icon'], text: text })
       end
     end
     relic_sets_cells
