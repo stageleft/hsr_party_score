@@ -76,16 +76,14 @@ class ScoreCard
     y_pos = offset[:y]
     width = char_area_width(this_character_info)
     this_character_info.each do |this_info|
-      area_size = this_info.calc_area
-      this_offset = { x: x_pos, y: y_pos }
-      height = area_size[:y]
+      height = this_info.calc_area[:y]
 
-      this_info.render_area(context, this_offset)
+      this_info.render_area(context, { x: x_pos, y: y_pos })
       context.set_source_rgb(0, 0, 0.1)
       context.rectangle(x_pos, y_pos, width, height)
       context.fill
 
-      y_pos += area_size[:y] + y_padding
+      y_pos += height + y_padding
     end
   end
 
@@ -102,11 +100,8 @@ class ScoreCard
 
   def render_card(context, offset)
     @player_info.render_area(context, offset)
-    area_size = @player_info.calc_area
-    context.set_source_rgb(0, 0, 0.1)
-    context.rectangle(x_pos, y_pos, width, height)
-    context.fill
 
+    area_size = @player_info.calc_area
     char_area_offset = { x: offset[:x], y: offset[:y] + (area_size[:y] + offset[:y]) }
     @unit_info.each do |this_character_info|
       render_character_area_background(context, char_area_offset, offset[:y], this_character_info)
@@ -124,6 +119,10 @@ class ScoreCard
     offset = { x: x_offset, y: y_offset }
     surface = Cairo::ImageSurface.new(canvas[:width], canvas[:height])
     context = Cairo::Context.new(surface)
+    context.set_source_rgb(0, 0.1, 0.1)
+    context.rectangle(0, 0, canvas[:width], canvas[:height])
+    context.fill
+
     render_card(context, offset)
 
     surface.write_to_png(output_path)
