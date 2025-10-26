@@ -95,11 +95,9 @@ class PartyCard < ScoreCard
   end
 
   def string_relics_sub(sub_affix)
-    string_array = []
-    sub_affix.each do |sub|
-      string_array.push("　サブ　#{sub['name']}：#{sub['percent'] == true ? sub['display'] : sub['value']}")
+    sub_affix.map do |sub|
+      "　サブ　#{sub['name']}：#{sub['percent'] == true ? sub['display'] : sub['value']}"
     end
-    string_array
   end
 
   def params_relics(relics)
@@ -117,11 +115,9 @@ class PartyCard < ScoreCard
   def params_relic_set(relic_sets)
     relic_sets_cells = []
     relic_sets.each do |effect|
+      text = ["#{effect['name']}（#{effect['num']}セット）"]
       effect['properties'].each do |prop|
-        text = [
-          "#{effect['name']}（#{effect['num']}セット）",
-          "　#{prop['name']}#{prop['percent'] == true ? prop['display'] : prop['value']}"
-        ]
+        text.push("　#{prop['name']}#{prop['percent'] == true ? prop['display'] : prop['value']}")
         relic_sets_cells.push({ image: effect['icon'], text: text })
       end
     end
